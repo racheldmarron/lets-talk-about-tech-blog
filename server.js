@@ -1,39 +1,43 @@
-const path = require('path');
-const express = require('express');
-const session = require('express-session');
-const exphbs = require('express-handlebars');
-const helpers = require('./utils/helpers');
+require('dotenv').config()
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+const express = require('express')
+const { join } = require('path')
 
-const sequelize = require('./config/config');
-const SequelizeStore = require('connect-session-sequelize')(session.Store);
+const passport = require('passport')
+const { User, Post, Note } = require('./models')
+const { Strategy: JWTStrategy, ExtractJwt } = require('passport-jwt')
 
-const sess = {
-  secret: 'Super secret secret',
-  cookie: {},
-  resave: false,
-  saveUninitialized: true,
-  store: new SequelizeStore({
-    db: sequelize
-  })
-};
+const app = express()
 
-app.use(session(sess));
+app.use(express.static(join(__dirname, 'public')))
+app.use(express.urlencoded({ extended: true }))
+app.use(express.json())
 
-const hbs = exphbs.create({ helpers });
+app.use(passport.initialize())
+app.use(passport.session())
 
-app.engine('handlebars', hbs.engine);
-app.set('view engine', 'handlebars');
+passport.use(User.createStrategy())
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
+passport.serializeUser(User.serializeUser())
+passport.deserializeUser(User.deserializeUser())
 
-app.use(require('./controllers/'));
+passport.use(new JWTStrategy({
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.SECRET
+}, async function ({ id }, cb) {
+  try {
+    const user = await User.findOne({ where: { id }, include: [Post] })
+    cb(null, user)
+  } catch (err) {
+    cb(err, null)
+  }
+}))
 
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}!`);
-  sequelize.sync({ force: false });
-});
+app.use(require('./routes'))
+
+async function init () {
+  await require('./db').sync()
+  app.listen(process.env.PORT || 3000)
+}
+
+init()
