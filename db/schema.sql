@@ -1,0 +1,4 @@
+DROP DATABASE IF EXISTS talkTech_db;
+
+CREATE DATABASE talkTech_db;
+
