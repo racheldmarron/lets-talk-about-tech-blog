@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+</head>
+<body>
+
+  <nav>
+    <div class="nav-wrapper">
+      <a href="#" class="brand-logo">Logo</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="profile.html">Profile</a></li>
+        <li id="logout"><a>Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+ 
+  <div class="container">
+    <h1>Home</h1>
+    <h2>Welcome to Techy Tech Blog!</h2>
+    <div class="row">
+      <form class="col s12">
+        <div class="row">
+          <div class="input-field col s12">
+            <textarea id="title" class="materialize-textarea"></textarea>
+            <label for="textarea1">Title</label>
+          </div>
+        </div>
+        
+      </form>
+    </div>
+    <div class="row">
+      <form class="col s12">
+        <div class="row">
+          <div class="input-field col s12">
+            <textarea id="body" class="materialize-textarea"></textarea>
+            <label for="textarea1">Body</label>
+          </div>
+        </div>
+        <a id="submitPost" class="waves-effect waves-light btn">Submit Post</a>
+      </form>
+    </div>
+    <div id="posts" class="row"></div>
+  </div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.1/axios.min.js"></script>
+  <script>
+
+    axios.get('/api/posts', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      .then(res=> {
+        console.log(res.data)
+        let posts = res.data
+        posts.forEach(post=> {
+          document.getElementById('posts').innerHTML += `
+          <h4 class="post" data-post="${post.id}" > ${post.title} </h4>
+          <h5> by ${post.User.username} </h5>
+          <h5> ${post.body} </h5>
+          <hr>
+          `
+        })
+      })
+
+      document.addEventListener('click', event => {
+        if(event.target.classList.contains('post')) {
+          console.log(event.target.dataset.post)
+          let postId = event.target.dataset.post
+          localStorage.setItem('post', postId )
+          window.location = 'post.html'
+        }
+      })
+
+
+
+    document.getElementById('submitPost').addEventListener('click', event => {
+      let newPost = {
+        title: document.getElementById('title').value,
+        body: document.getElementById('body').value
+      }
+      console.log(newPost)
+      axios.post('/api/posts', newPost, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      }
+      )
+      .then(res=> {
+        console.log(res.data)
+      })
+
+    })
+
+    document.getElementById("logout").addEventListener('click', event=> {
+    localStorage.removeItem('token')
+    window.location = 'login.html'
+    })
+
+  </script>
+</body>
+</html>
