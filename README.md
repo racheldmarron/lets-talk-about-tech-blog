@@ -14,7 +14,7 @@ I have honestly tried my very best and I have completed all of the code needed f
 
 ![](./assets/reference-1.png)
 ![](./assets/reference-2.png)
-
+![](./assets/reference-3.png)
 
 ## Overview 
 A CMS style blog for engineers to write about tech and code. Following the MVC paradigm, this app is built with Handlebars, Express, and Materialize CSS. Users can create and authenticate their account, add and edit blogs, and comment on other users. 
