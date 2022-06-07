@@ -33,7 +33,7 @@ passport.use(new JWTStrategy({
   }
 }))
 
-app.use(require('./routes'))
+app.use(require('./controllers'))
 
 async function init () {
   await require('./db').sync()
