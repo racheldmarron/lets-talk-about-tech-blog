@@ -7,4 +7,4 @@ routes.use('/user', userRoutes);
 routes.use('/post', postRoutes);
 routes.use('/comment', commentRoutes);
 
-module.exports = router;
+module.exports = routes;

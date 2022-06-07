@@ -1,43 +1,47 @@
-require('dotenv').config()
+require('dotenv');
 
-const express = require('express')
-const { join } = require('path')
+const express = require('express');
+const path = require('path');
+const session = require('express-session');
+const handlebars = require('express-handlebars');
+const routes = require('./controllers');
+// const passport = require('passport')
 
-const passport = require('passport')
-const { User, Post, Note } = require('./models')
-const { Strategy: JWTStrategy, ExtractJwt } = require('passport-jwt')
+const sequelize = require('./config/connection'); 
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
 
-const app = express()
+require('models/Comment.js');
+require('models/Post.js');
+require('models/User.js');
 
-app.use(express.static(join(__dirname, 'public')))
-app.use(express.urlencoded({ extended: true }))
-app.use(express.json())
+const app = express(); 
+const PORT = process.env.PORT || 3001; 
 
-app.use(passport.initialize())
-app.use(passport.session())
+const hb = handlebars.create({}); 
 
-passport.use(User.createStrategy())
+const sessions = {
+  secret: 'Super secret secret',
+  cookie: {
+      maxAge: 22*60*1000
+  },
+  resave: false,
+  saveUninitialized: true,
+  store: new SequelizeStore({
+      db: sequelize
+  })
+};
 
-passport.serializeUser(User.serializeUser())
-passport.deserializeUser(User.deserializeUser())
+app.use(session(sessions));
 
-passport.use(new JWTStrategy({
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: process.env.SECRET
-}, async function ({ id }, cb) {
-  try {
-    const user = await User.findOne({ where: { id }, include: [Post] })
-    cb(null, user)
-  } catch (err) {
-    cb(err, null)
-  }
-}))
+app.engine('handlebars', hb.engine);
+app.set('view engine', 'handlebars');
 
-app.use(require('./controllers'))
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-async function init () {
-  await require('./db').sync()
-  app.listen(process.env.PORT || 3001)
-}
+app.use(routes);
 
-init()
+sequelize.sync({ force: false }).then(() => {
+  app.listen(PORT, () => console.log('The app is now listening on PORT 3001'));
+});
