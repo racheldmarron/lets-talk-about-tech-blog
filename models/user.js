@@ -1,13 +1,40 @@
-const pls = require('passport-local-sequelize')
-const { DataTypes } = require('sequelize')
-const sequelize = require('../db')
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/connection.js');
 
-const User = pls.defineUser(sequelize, {
-  // your columns here...
-  username: {
-    type: DataTypes.STRING,
-    allowNull: false
-  }
-})
+class User extends Model {} 
 
-module.exports = User
+User.init(
+    {
+        id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            primaryKey: true,
+            autoIncrement: true
+        },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            unique: true
+        },
+        password: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+    },
+    {
+        hooks: {
+            beforeCreate: async (newUserData) => {
+                newUserData.password = await bcrypt.hash(newUserData.password, 10);
+                return newUserData;
+            },
+        },
+        sequelize,
+        timestamps: false,
+        freezeTableName: true,
+        underscored: true,
+        modelName: 'user',
+    }
+
+);
+
+module.exports = User;
